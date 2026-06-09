@@ -1,4 +1,8 @@
-# stash
+# Terminal Stash
+
+<p align="center">
+  <img src="docs/banner.svg" alt="Terminal Stash — self-hosted LAN clipboard & file drop" width="880">
+</p>
 
 A minimalist, self-hosted **shared clipboard & file drop** for your home network.
 Run it on your home server, open it in a browser on any machine, and copy text or
@@ -42,19 +46,32 @@ To pull updates later: `docker compose up --build -d`. Data lives in the
 
 ## Run without Docker
 
-Requires Go 1.23+.
+Requires Go 1.26+.
 
 ```bash
-APP_PASSWORD=test DATA_DIR=./data go run ./src
+make run
+# equivalent to: APP_PASSWORD=test DATA_DIR=./data go run ./src
 # → http://localhost:7827
 ```
 
-## Tests
+## Development
 
-```bash
-go test ./...                              # unit + integration (httptest, real SQLite in temp dirs)
-cd e2e && npm install && npx playwright test   # browser end-to-end suite
-```
+Day-to-day commands live in the `Makefile` (`make help` lists everything).
+The lint/security tools need no global install — they run via
+`go run <module>@<version>`, pinned at the top of the Makefile.
+
+| Command | What it does |
+|---|---|
+| `make install` | One-shot setup: Go modules, lint/security tools, e2e npm deps + Chromium |
+| `make run` | Run the server locally on `:7827` (`APP_PASSWORD=test`) |
+| `make build` | Build a static binary into `bin/stash` |
+| `make test` | Unit + integration tests (`go test ./...`) |
+| `make test-e2e` | Playwright browser end-to-end suite |
+| `make fmt` | Format Go sources in place |
+| `make check` | Pre-commit gate: gofmt, `go vet`, staticcheck, `go mod tidy` check, tests |
+| `make audit` | Security checks: govulncheck + gosec |
+| `make ci` | Everything except the browser e2e suite |
+| `make docker-up` / `docker-down` | Build & start / stop the compose stack |
 
 The e2e suite builds the binary itself, starts it on port 7832 with a clean
 data dir, and covers login (including the rate-limit lockout), live SSE sync

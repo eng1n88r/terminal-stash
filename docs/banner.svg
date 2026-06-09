@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 250" role="img" aria-label="Terminal Stash — self-hosted LAN clipboard and file drop">
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.4" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <pattern id="scanlines" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="2" fill="#ffffff" opacity="0.03"/>
+    </pattern>
+  </defs>
+
+  <!-- terminal window -->
+  <rect x="6" y="6" width="868" height="238" rx="14" fill="#0b0e0f" stroke="#1f6e43" stroke-width="2"/>
+
+  <!-- title bar -->
+  <circle cx="32" cy="32" r="6" fill="#3ad07a"/>
+  <circle cx="54" cy="32" r="6" fill="#ffb000"/>
+  <circle cx="76" cy="32" r="6" fill="#1f6e43"/>
+  <text x="440" y="37" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#2e8f56">stash — :7827</text>
+  <line x1="6" y1="52" x2="874" y2="52" stroke="#15331f" stroke-width="1.5"/>
+
+  <!-- prompt mark (scaled-up favicon) -->
+  <g fill="none" stroke="#3ad07a" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+    <polyline points="56,103 96,143 56,183"/>
+    <line x1="118" y1="186" x2="166" y2="186"/>
+  </g>
+
+  <!-- wordmark -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" filter="url(#glow)">
+    <text x="210" y="135" font-size="52" font-weight="bold" letter-spacing="4" fill="#3ad07a">TERMINAL STASH</text>
+    <text x="213" y="172" font-size="19" fill="#ffb000">self-hosted LAN clipboard &amp; file drop</text>
+  </g>
+
+  <!-- prompt line with blinking cursor -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">
+    <text x="213" y="212" fill="#2e8f56">$ docker compose up -d</text>
+    <rect x="438" y="199" width="10" height="17" fill="#3ad07a">
+      <animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.5;0.5;1" dur="1.2s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <!-- scanline overlay -->
+  <rect x="6" y="6" width="868" height="238" rx="14" fill="url(#scanlines)"/>
+</svg>
