@@ -14,8 +14,10 @@ import (
 )
 
 const (
-	cookieName    = "hc_session"
-	sessionMaxAge = 30 * 24 * time.Hour
+	cookieName = "hc_session"
+	// Kept short-ish: tokens are stateless, so logout can't revoke them
+	// server-side — expiry and process restarts are the only invalidation.
+	sessionMaxAge = 7 * 24 * time.Hour
 )
 
 // Auth implements a single-shared-password gate using a signed session cookie.

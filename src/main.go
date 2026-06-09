@@ -57,10 +57,11 @@ func envInt(key string, def int) int {
 
 // App bundles the shared dependencies passed to HTTP handlers.
 type App struct {
-	cfg   Config
-	store *Store
-	auth  *Auth
-	hub   *Hub
+	cfg    Config
+	store  *Store
+	auth   *Auth
+	hub    *Hub
+	logins *loginLimiter
 }
 
 func main() {
@@ -78,10 +79,11 @@ func main() {
 	defer store.Close()
 
 	app := &App{
-		cfg:   cfg,
-		store: store,
-		auth:  NewAuth(cfg.Password),
-		hub:   NewHub(),
+		cfg:    cfg,
+		store:  store,
+		auth:   NewAuth(cfg.Password),
+		hub:    NewHub(),
+		logins: newLoginLimiter(10, 15*time.Minute),
 	}
 
 	// Background retention sweep.
@@ -92,6 +94,7 @@ func main() {
 		Addr:              ":" + cfg.Port,
 		Handler:           app.routes(),
 		ReadHeaderTimeout: 10 * time.Second,
+		IdleTimeout:       2 * time.Minute,
 	}
 
 	go func() {
@@ -159,5 +162,21 @@ func (a *App) routes() http.Handler {
 	mux.HandleFunc("DELETE /api/items/{id}", a.requireAuthAPI(a.handleDelete))
 	mux.HandleFunc("GET /api/events", a.requireAuthAPI(a.handleEvents))
 
-	return mux
+	return securityHeaders(mux)
+}
+
+// securityHeaders adds defense-in-depth headers to every response. The strict
+// CSP works because all assets are embedded and served from this origin —
+// keep scripts/styles in external files under web/, never inline.
+func securityHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("Content-Security-Policy",
+			"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; "+
+				"connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'")
+		h.Set("X-Content-Type-Options", "nosniff")
+		h.Set("X-Frame-Options", "DENY")
+		h.Set("Referrer-Policy", "no-referrer")
+		next.ServeHTTP(w, r)
+	})
 }

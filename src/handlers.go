@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
+	"net"
 	"net/http"
 	"strings"
 )
@@ -36,6 +38,15 @@ func (app *App) servePage(w http.ResponseWriter, path string) {
 // --- Auth ------------------------------------------------------------------
 
 func (app *App) handleLogin(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 4<<10)
+
+	ip := clientIP(r)
+	if !app.logins.allow(ip) {
+		log.Printf("login rate-limited: %s", ip)
+		http.Error(w, "too many attempts, try again later", http.StatusTooManyRequests)
+		return
+	}
+
 	var pw string
 	if strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
 		var body struct {
@@ -51,10 +62,13 @@ func (app *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !app.auth.Check(pw) {
+		app.logins.fail(ip)
+		log.Printf("login failed: %s", ip)
 		http.Error(w, "invalid password", http.StatusUnauthorized)
 		return
 	}
-	app.auth.issueCookie(w, r.TLS != nil)
+	app.logins.success(ip)
+	app.auth.issueCookie(w, secureRequest(r))
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
@@ -161,6 +175,10 @@ func (app *App) handleUploadFiles(w http.ResponseWriter, r *http.Request) {
 
 func (app *App) handleDownload(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
+	if !validID(id) {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
 	it, err := app.store.Get(id)
 	if err != nil || it.Kind != "file" {
 		http.Error(w, "not found", http.StatusNotFound)
@@ -173,6 +191,10 @@ func (app *App) handleDownload(w http.ResponseWriter, r *http.Request) {
 
 func (app *App) handleDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
+	if !validID(id) {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
 	if err := app.store.Delete(id); err != nil {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
@@ -200,6 +222,42 @@ func sanitizeName(name string) string {
 		return "file"
 	}
 	return name
+}
+
+// validID reports whether id has the shape of our 16-byte hex ids. PathValue
+// can yield values with encoded slashes, so anything else stays away from the
+// filesystem even though the DB lookup would already miss.
+func validID(id string) bool {
+	if len(id) != 32 {
+		return false
+	}
+	for i := 0; i < len(id); i++ {
+		c := id[i]
+		if (c < '0' || c > '9') && (c < 'a' || c > 'f') {
+			return false
+		}
+	}
+	return true
+}
+
+// clientIP returns the originating client address for logging and rate
+// limiting, preferring X-Forwarded-For (set by the reverse proxy) over the
+// socket peer.
+func clientIP(r *http.Request) string {
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		ip, _, _ := strings.Cut(xff, ",")
+		return strings.TrimSpace(ip)
+	}
+	if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+		return host
+	}
+	return r.RemoteAddr
+}
+
+// secureRequest reports whether the request arrived over HTTPS, either
+// directly or via a TLS-terminating reverse proxy.
+func secureRequest(r *http.Request) bool {
+	return r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
 }
 
 // urlEncode percent-encodes a filename for the Content-Disposition header.

@@ -16,7 +16,9 @@ The UI is a two-pane terminal: a composer on the left, the live feed on the righ
 
 > **LAN-only.** There is no TLS and no per-user accounts by design. Do **not**
 > expose this directly to the internet. If you need remote access, put it behind a
-> reverse proxy / VPN that terminates HTTPS.
+> reverse proxy / VPN / Cloudflare Tunnel that terminates HTTPS. The proxy must
+> forward `X-Forwarded-Proto` (so the session cookie gets the `Secure` flag) and
+> `X-Forwarded-For` (so login rate limiting and logs see real client IPs).
 
 ## Quick start (Docker)
 
@@ -27,8 +29,13 @@ echo 'APP_PASSWORD=something-only-you-know' > .env
 # 2. build & run
 docker compose up --build -d
 
-# 3. open http://<your-server-ip>:7827 on any machine, log in with the password
+# 3. open http://localhost:7827 and log in with the password
 ```
+
+By default the container port is bound to `127.0.0.1` only, so it's reachable
+just from the host (typically via a reverse proxy or Cloudflare Tunnel running
+there). For direct LAN access (`http://<your-server-ip>:7827`), set
+`BIND_ADDR=0.0.0.0` in `.env`.
 
 To pull updates later: `docker compose up --build -d`. Data lives in the
 `stash-data` named volume and survives rebuilds.
@@ -80,7 +87,9 @@ Changes are broadcast to connected browsers over an SSE stream.
 ## Notes
 
 - Restarting the server invalidates existing login sessions (the cookie signing
-  key is regenerated on each start) — just log in again.
+  key is regenerated on each start) — just log in again. Sessions otherwise
+  last 7 days.
+- Failed logins are rate-limited per client IP (10 per 15 minutes) and logged.
 - Pasted images are stored as file uploads.
 - The scanline/glow effect is cosmetic CSS; toggle the green/amber theme from the
   top bar (saved per browser).

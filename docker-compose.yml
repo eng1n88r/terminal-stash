@@ -4,11 +4,14 @@ services:
     image: stash
     container_name: stash
     ports:
-      - "7827:7827"
+      # Bound to localhost by default — reach it through your reverse proxy or
+      # Cloudflare Tunnel. Set BIND_ADDR=0.0.0.0 in .env for direct LAN access.
+      - "${BIND_ADDR:-127.0.0.1}:7827:7827"
     environment:
       # Set your real password in a local .env file (APP_PASSWORD=...), which is
-      # git-ignored. The fallback below is only a placeholder — never commit a real one.
-      APP_PASSWORD: "${APP_PASSWORD:-change-me}"
+      # git-ignored. No fallback on purpose: compose fails fast if .env is missing
+      # rather than starting an internet-facing instance with a guessable password.
+      APP_PASSWORD: "${APP_PASSWORD:?APP_PASSWORD must be set in .env}"
       MAX_ITEMS: "${MAX_ITEMS:-200}"
       MAX_AGE_DAYS: "${MAX_AGE_DAYS:-30}"
       MAX_UPLOAD_MB: "${MAX_UPLOAD_MB:-100}"
