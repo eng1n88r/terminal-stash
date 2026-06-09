@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>stash</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="drag-banner">drop files to upload ▼</div>
+
+  <div class="wrap" id="dropzone">
+    <header>
+      <div class="prompt">
+        <span class="host">you@stash</span><span class="path">:~</span>$<span class="cursor"></span>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="theme-btn" title="click to cycle themes">green</button>
+        <button class="btn" id="logout-btn">logout</button>
+      </div>
+    </header>
+
+    <div class="columns">
+      <section class="composer col-left">
+        <div class="col-title">// new</div>
+        <div class="field">
+          <span class="glyph">&gt;</span>
+          <textarea id="text" placeholder="type or paste text…  (Ctrl/Cmd+Enter to send)"></textarea>
+        </div>
+        <div class="composer-actions">
+          <div class="toolbar">
+            <button class="btn" id="file-btn">upload</button>
+            <button class="btn" id="send-btn">send</button>
+          </div>
+        </div>
+        <div class="hint">paste anywhere · drag &amp; drop files · Ctrl/Cmd+V</div>
+        <input id="file-input" type="file" multiple hidden />
+      </section>
+
+      <section class="col-right">
+        <div class="col-title">// recent — newest first</div>
+        <div id="feed"></div>
+      </section>
+    </div>
+  </div>
+
+  <div id="flash"></div>
+
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>

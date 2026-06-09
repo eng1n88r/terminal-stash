@@ -1,0 +1,13 @@
+# secrets
+.env
+
+# data & build artifacts
+/testdata/
+/data/
+/shotdata/
+*.exe
+*.pid
+/stash
+
+# IDE
+/.idea/

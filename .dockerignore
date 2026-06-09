@@ -1,0 +1,9 @@
+.git
+.gitignore
+testdata
+*.exe
+hc.pid
+hc2.pid
+README.md
+*.md
+.claude
