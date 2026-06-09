@@ -32,7 +32,7 @@ func (app *App) servePage(w http.ResponseWriter, path string) {
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write(b)
+	_, _ = w.Write(b)
 }
 
 // --- Auth ------------------------------------------------------------------
@@ -141,7 +141,9 @@ func (app *App) handleUploadFiles(w http.ResponseWriter, r *http.Request) {
 		}
 
 		size, err := io.Copy(f, io.LimitReader(part, maxBytes+1))
-		f.Close()
+		if cerr := f.Close(); err == nil {
+			err = cerr // a failed close can mean unflushed data — treat as a write failure
+		}
 		if err != nil || size > maxBytes {
 			app.store.removeBlob(id)
 			if size > maxBytes {
@@ -208,7 +210,7 @@ func (app *App) handleDelete(w http.ResponseWriter, r *http.Request) {
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
+	_ = json.NewEncoder(w).Encode(v)
 }
 
 // sanitizeName strips any directory components from an uploaded filename.

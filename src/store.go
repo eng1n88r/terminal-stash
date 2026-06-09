@@ -31,11 +31,11 @@ type Store struct {
 }
 
 func NewStore(cfg Config) (*Store, error) {
-	if err := os.MkdirAll(cfg.DataDir, 0o755); err != nil {
+	if err := os.MkdirAll(cfg.DataDir, 0o700); err != nil {
 		return nil, fmt.Errorf("create data dir: %w", err)
 	}
 	filesDir := filepath.Join(cfg.DataDir, "files")
-	if err := os.MkdirAll(filesDir, 0o755); err != nil {
+	if err := os.MkdirAll(filesDir, 0o700); err != nil {
 		return nil, fmt.Errorf("create files dir: %w", err)
 	}
 
@@ -58,7 +58,7 @@ func NewStore(cfg Config) (*Store, error) {
 		);
 		CREATE INDEX IF NOT EXISTS idx_items_created_at ON items(created_at);
 	`); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("migrate: %w", err)
 	}
 

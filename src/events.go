@@ -70,7 +70,9 @@ func (app *App) handleEvents(w http.ResponseWriter, r *http.Request) {
 	defer app.hub.unsubscribe(ch)
 
 	// Initial comment so the client's connection opens immediately.
-	w.Write([]byte(": connected\n\n"))
+	if _, err := w.Write([]byte(": connected\n\n")); err != nil {
+		return
+	}
 	flusher.Flush()
 
 	heartbeat := time.NewTicker(25 * time.Second)
@@ -96,8 +98,12 @@ func (app *App) handleEvents(w http.ResponseWriter, r *http.Request) {
 			if _, err := w.Write([]byte("data: ")); err != nil {
 				return
 			}
-			w.Write(data)
-			w.Write([]byte("\n\n"))
+			if _, err := w.Write(data); err != nil {
+				return
+			}
+			if _, err := w.Write([]byte("\n\n")); err != nil {
+				return
+			}
 			flusher.Flush()
 		}
 	}
