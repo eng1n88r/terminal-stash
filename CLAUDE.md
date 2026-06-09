@@ -16,7 +16,10 @@ APP_PASSWORD=test DATA_DIR=./data go run ./src   # → http://localhost:7827
 
 go build ./...          # compile
 go vet ./...            # vet
-go test ./...           # tests (none currently exist)
+go test ./...           # unit + integration tests (src/*_test.go; integration_test.go runs the full HTTP stack via httptest)
+
+# End-to-end browser tests (Playwright; builds the binary and starts it on :7832 with a clean data dir)
+cd e2e && npm install && npx playwright test
 
 # Docker (production path; data persists in the stash-data named volume)
 echo 'APP_PASSWORD=...' > .env   # git-ignored

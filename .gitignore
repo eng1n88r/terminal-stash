@@ -9,5 +9,12 @@
 *.pid
 /stash
 
+# e2e artifacts
+/e2e/node_modules/
+/e2e/.data/
+/e2e/.bin/
+/e2e/test-results/
+/e2e/playwright-report/
+
 # IDE
 /.idea/

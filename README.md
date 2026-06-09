@@ -49,6 +49,17 @@ APP_PASSWORD=test DATA_DIR=./data go run ./src
 # → http://localhost:7827
 ```
 
+## Tests
+
+```bash
+go test ./...                              # unit + integration (httptest, real SQLite in temp dirs)
+cd e2e && npm install && npx playwright test   # browser end-to-end suite
+```
+
+The e2e suite builds the binary itself, starts it on port 7832 with a clean
+data dir, and covers login (including the rate-limit lockout), live SSE sync
+across tabs, uploads/downloads, and CSP regressions.
+
 ## Configuration
 
 All configuration is via environment variables:
