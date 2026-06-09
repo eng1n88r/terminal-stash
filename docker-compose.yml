@@ -4,14 +4,14 @@ services:
     image: stash
     container_name: stash
     ports:
-      - "8080:8080"
+      - "7827:7827"
     environment:
       # Set your real password in a local .env file (APP_PASSWORD=...), which is
       # git-ignored. The fallback below is only a placeholder — never commit a real one.
       APP_PASSWORD: "${APP_PASSWORD:-change-me}"
-      MAX_ITEMS: "200"
-      MAX_AGE_DAYS: "30"
-      MAX_UPLOAD_MB: "100"
+      MAX_ITEMS: "${MAX_ITEMS:-200}"
+      MAX_AGE_DAYS: "${MAX_AGE_DAYS:-30}"
+      MAX_UPLOAD_MB: "${MAX_UPLOAD_MB:-100}"
     volumes:
       - stash-data:/data
     restart: unless-stopped

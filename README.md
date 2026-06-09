@@ -27,7 +27,7 @@ echo 'APP_PASSWORD=something-only-you-know' > .env
 # 2. build & run
 docker compose up --build -d
 
-# 3. open http://<your-server-ip>:8080 on any machine, log in with the password
+# 3. open http://<your-server-ip>:7827 on any machine, log in with the password
 ```
 
 To pull updates later: `docker compose up --build -d`. Data lives in the
@@ -38,8 +38,8 @@ To pull updates later: `docker compose up --build -d`. Data lives in the
 Requires Go 1.23+.
 
 ```bash
-APP_PASSWORD=test DATA_DIR=./data go run .
-# → http://localhost:8080
+APP_PASSWORD=test DATA_DIR=./data go run ./src
+# → http://localhost:7827
 ```
 
 ## Configuration
@@ -49,7 +49,7 @@ All configuration is via environment variables:
 | Variable | Default | Description |
 |---|---|---|
 | `APP_PASSWORD` | *(required)* | Shared password. The server refuses to start if unset. |
-| `PORT` | `8080` | Listen port. |
+| `PORT` | `7827` | Listen port. |
 | `DATA_DIR` | `/data` | Where the SQLite DB and uploaded files are stored. |
 | `MAX_ITEMS` | `200` | Keep at most this many items; oldest are pruned. `0` = unlimited. |
 | `MAX_AGE_DAYS` | `30` | Delete items older than this. `0` = never expire. |

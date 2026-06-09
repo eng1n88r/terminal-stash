@@ -29,7 +29,7 @@ type Config struct {
 
 func loadConfig() Config {
 	return Config{
-		Port:        env("PORT", "8080"),
+		Port:        env("PORT", "7827"),
 		DataDir:     env("DATA_DIR", "/data"),
 		Password:    os.Getenv("APP_PASSWORD"),
 		MaxItems:    envInt("MAX_ITEMS", 200),
