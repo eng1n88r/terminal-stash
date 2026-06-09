@@ -18,8 +18,9 @@ go build ./...          # compile
 go vet ./...            # vet
 go test ./...           # unit + integration tests (src/*_test.go; integration_test.go runs the full HTTP stack via httptest)
 
-# End-to-end browser tests (Playwright; builds the binary and starts it on :7832 with a clean data dir)
+# End-to-end browser tests (Playwright/TypeScript; builds the binary and starts it on :7832 with a clean data dir)
 cd e2e && npm install && npx playwright test
+cd e2e && npm run typecheck   # tsc --noEmit over the specs and config
 
 # Docker (production path; data persists in the stash-data named volume)
 echo 'APP_PASSWORD=...' > .env   # git-ignored

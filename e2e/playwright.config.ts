@@ -1,9 +1,9 @@
-const { defineConfig } = require('@playwright/test');
+import { defineConfig } from '@playwright/test';
 
 // The suite runs single-worker against one shared server instance: the SSE
 // sync tests and the rate-limit lockout (03-ratelimit, which must run last)
 // depend on ordering.
-module.exports = defineConfig({
+export default defineConfig({
   testDir: './tests',
   fullyParallel: false,
   workers: 1,

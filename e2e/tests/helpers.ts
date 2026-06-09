@@ -1,13 +1,11 @@
-const { expect } = require('@playwright/test');
+import { expect, type Page } from '@playwright/test';
 
-const PASSWORD = 'test'; // must match APP_PASSWORD in start-server.js
+export const PASSWORD = 'test'; // must match APP_PASSWORD in start-server.js
 
-async function login(page) {
+export async function login(page: Page): Promise<void> {
   await page.goto('/login');
   await page.fill('#password', PASSWORD);
   await page.click('button[type=submit]');
   await page.waitForURL((url) => url.pathname === '/');
   await expect(page.locator('#feed')).toBeVisible();
 }
-
-module.exports = { login, PASSWORD };

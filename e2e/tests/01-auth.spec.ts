@@ -1,11 +1,11 @@
-const { test, expect } = require('@playwright/test');
-const { login } = require('./helpers');
+import { test, expect } from '@playwright/test';
+import { login } from './helpers';
 
 test('unauthenticated visit redirects to login with security headers', async ({ page }) => {
   const resp = await page.goto('/');
   expect(new URL(page.url()).pathname).toBe('/login');
 
-  const h = resp.headers();
+  const h = resp!.headers();
   expect(h['content-security-policy']).toContain("default-src 'self'");
   expect(h['x-content-type-options']).toBe('nosniff');
   expect(h['x-frame-options']).toBe('DENY');

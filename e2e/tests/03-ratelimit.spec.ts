@@ -1,5 +1,5 @@
-const { test, expect } = require('@playwright/test');
-const { PASSWORD } = require('./helpers');
+import { test, expect } from '@playwright/test';
+import { PASSWORD } from './helpers';
 
 // Must run last: it locks the test client's IP out of /api/login for the
 // remainder of the limiter window (the server restarts on the next run).

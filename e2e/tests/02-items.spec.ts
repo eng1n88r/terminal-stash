@@ -1,6 +1,6 @@
-const { test, expect } = require('@playwright/test');
-const fs = require('fs');
-const { login } = require('./helpers');
+import { test, expect } from '@playwright/test';
+import fs from 'node:fs';
+import { login } from './helpers';
 
 test('text snippet: send, render, copy, delete', async ({ page }) => {
   await login(page);
@@ -46,7 +46,7 @@ test('file upload, download, delete', async ({ page }, testInfo) => {
   await expect(item).toBeVisible();
 
   const href = await item.locator('a[download]').getAttribute('href');
-  const resp = await page.request.get(href);
+  const resp = await page.request.get(href!);
   expect(resp.status()).toBe(200);
   expect(await resp.text()).toBe(payload);
   expect(resp.headers()['content-disposition']).toContain('attachment');
@@ -72,7 +72,7 @@ test('theme cycles and persists across reload', async ({ page }) => {
 });
 
 test('no CSP violations or page errors during a session', async ({ page }) => {
-  const errors = [];
+  const errors: string[] = [];
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   page.on('pageerror', (e) => errors.push(String(e)));
 
