@@ -20,10 +20,10 @@ func (app *App) handleIndex(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
-	// Personalize the prompt: "you@stash" → "<APP_USER>@stash". Escaped because
+	// Personalize the prompt: "user@stash" → "<APP_USER>@stash". Escaped because
 	// the value comes from the environment, not from the embedded page.
 	if u := app.cfg.UserName; u != "" {
-		b = bytes.ReplaceAll(b, []byte("you@stash"), []byte(html.EscapeString(u)+"@stash"))
+		b = bytes.ReplaceAll(b, []byte("user@stash"), []byte(html.EscapeString(u)+"@stash"))
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	_, _ = w.Write(b)

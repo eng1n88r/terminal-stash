@@ -550,8 +550,8 @@ func TestIndexPromptPersonalization(t *testing.T) {
 
 	t.Run("default prompt", func(t *testing.T) {
 		body := fetchIndex(t, nil)
-		if !strings.Contains(body, "you@stash") {
-			t.Error("index without APP_USER should keep the you@stash prompt")
+		if !strings.Contains(body, "user@stash") {
+			t.Error("index without APP_USER should keep the user@stash prompt")
 		}
 	})
 
@@ -560,7 +560,7 @@ func TestIndexPromptPersonalization(t *testing.T) {
 		if !strings.Contains(body, "exbarboss@stash") {
 			t.Error("index should render the configured APP_USER in the prompt")
 		}
-		if strings.Contains(body, "you@stash") {
+		if strings.Contains(body, "user@stash") {
 			t.Error("default prompt should be replaced when APP_USER is set")
 		}
 	})
