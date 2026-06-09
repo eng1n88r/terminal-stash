@@ -5,6 +5,7 @@
 /testdata/
 /data/
 /shotdata/
+/bin/
 *.exe
 *.pid
 /stash
