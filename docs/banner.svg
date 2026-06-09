@@ -16,10 +16,10 @@
   <rect x="6" y="6" width="868" height="238" rx="14" fill="#0b0e0f" stroke="#1f6e43" stroke-width="2"/>
 
   <!-- title bar -->
-  <circle cx="32" cy="32" r="6" fill="#3ad07a"/>
+  <circle cx="32" cy="32" r="6" fill="#ff5f56"/>
   <circle cx="54" cy="32" r="6" fill="#ffb000"/>
   <circle cx="76" cy="32" r="6" fill="#1f6e43"/>
-  <text x="440" y="37" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#2e8f56">stash — :7827</text>
+  <text x="440" y="37" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#2e8f56">stash</text>
   <line x1="6" y1="52" x2="874" y2="52" stroke="#15331f" stroke-width="1.5"/>
 
   <!-- prompt mark (scaled-up favicon) -->
@@ -36,8 +36,8 @@
 
   <!-- prompt line with blinking cursor -->
   <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">
-    <text x="213" y="212" fill="#2e8f56">$ docker compose up -d</text>
-    <rect x="438" y="199" width="10" height="17" fill="#3ad07a">
+    <text x="213" y="212" fill="#2e8f56" textLength="87" lengthAdjust="spacingAndGlyphs">$ ./stash</text>
+    <rect x="306" y="199" width="10" height="17" fill="#3ad07a">
       <animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.5;0.5;1" dur="1.2s" repeatCount="indefinite"/>
     </rect>
   </g>

@@ -26,6 +26,34 @@ The UI is a two-pane terminal: a composer on the left, the live feed on the righ
 
 ## Quick start (Docker)
 
+### Run the published image
+
+Every release publishes a multi-arch (amd64/arm64) image to
+[Docker Hub](https://hub.docker.com/r/exbarboss/terminal-stash), tagged
+`X.Y.Z`, `X.Y`, `X`, and `latest`. No clone needed:
+
+```bash
+docker run -d --name stash \
+  -p 127.0.0.1:7827:7827 \
+  -e APP_PASSWORD=something-only-you-know \
+  -v stash-data:/data \
+  exbarboss/terminal-stash:latest
+
+# open http://localhost:7827 and log in with the password
+```
+
+`-p 127.0.0.1:7827:7827` keeps it reachable only from the host (typically
+behind a reverse proxy or Cloudflare Tunnel running there). For direct LAN
+access (`http://<your-server-ip>:7827`) use `-p 7827:7827` instead. Data
+lives in the `stash-data` named volume. To update:
+
+```bash
+docker pull exbarboss/terminal-stash:latest
+docker rm -f stash   # then re-run the docker run command above
+```
+
+### Build from source (compose)
+
 ```bash
 # 1. set your password in a local .env file (git-ignored, never committed):
 echo 'APP_PASSWORD=something-only-you-know' > .env
@@ -36,10 +64,8 @@ docker compose up --build -d
 # 3. open http://localhost:7827 and log in with the password
 ```
 
-By default the container port is bound to `127.0.0.1` only, so it's reachable
-just from the host (typically via a reverse proxy or Cloudflare Tunnel running
-there). For direct LAN access (`http://<your-server-ip>:7827`), set
-`BIND_ADDR=0.0.0.0` in `.env`.
+By default the container port is bound to `127.0.0.1` only. For direct LAN
+access, set `BIND_ADDR=0.0.0.0` in `.env`.
 
 To pull updates later: `docker compose up --build -d`. Data lives in the
 `stash-data` named volume and survives rebuilds.
