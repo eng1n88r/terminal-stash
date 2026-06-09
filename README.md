@@ -10,7 +10,7 @@ files between them. New items appear **live** on every open browser.
 
 The UI is a two-pane terminal: a composer on the left, the live feed on the right.
 
-- Terminal / TUI aesthetic (green or amber phosphor, toggle in the top bar)
+- Terminal / TUI aesthetic with 8 phosphor themes (green, amber, cyan, ice, ultraviolet, synthwave, matrix, mono — cycle in the top bar)
 - Paste text, click to copy it back anywhere
 - Drag-and-drop or paste files (and images) to upload; one-click download
 - Live sync across machines via Server-Sent Events — no refresh
@@ -145,8 +145,8 @@ Changes are broadcast to connected browsers over an SSE stream.
   last 7 days.
 - Failed logins are rate-limited per client IP (10 per 15 minutes) and logged.
 - Pasted images are stored as file uploads.
-- The scanline/glow effect is cosmetic CSS; toggle the green/amber theme from the
-  top bar (saved per browser).
+- The scanline/glow effect is cosmetic CSS; cycle through the phosphor themes
+  from the top bar (saved per browser).
 
 ## License
 
