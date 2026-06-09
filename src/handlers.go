@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"html"
 	"io"
 	"log"
 	"net"
@@ -13,7 +15,18 @@ import (
 // --- Pages -----------------------------------------------------------------
 
 func (app *App) handleIndex(w http.ResponseWriter, r *http.Request) {
-	app.servePage(w, "web/index.html")
+	b, err := webFS.ReadFile("web/index.html")
+	if err != nil {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	// Personalize the prompt: "you@stash" → "<APP_USER>@stash". Escaped because
+	// the value comes from the environment, not from the embedded page.
+	if u := app.cfg.UserName; u != "" {
+		b = bytes.ReplaceAll(b, []byte("you@stash"), []byte(html.EscapeString(u)+"@stash"))
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write(b)
 }
 
 func (app *App) handleLoginPage(w http.ResponseWriter, r *http.Request) {

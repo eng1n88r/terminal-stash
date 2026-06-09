@@ -110,6 +110,7 @@ All configuration is via environment variables:
 | Variable | Default | Description |
 |---|---|---|
 | `APP_PASSWORD` | *(required)* | Shared password. The server refuses to start if unset. |
+| `APP_USER` | `you` | Name shown in the UI's terminal prompt (`<name>@stash`). |
 | `PORT` | `7827` | Listen port. |
 | `DATA_DIR` | `/data` | Where the SQLite DB and uploaded files are stored. |
 | `MAX_ITEMS` | `200` | Keep at most this many items; oldest are pruned. `0` = unlimited. |

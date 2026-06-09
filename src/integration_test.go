@@ -530,3 +530,48 @@ func TestMultiFileUpload(t *testing.T) {
 		t.Errorf("multi upload -> %d, %d items", resp.StatusCode, len(created))
 	}
 }
+
+func TestIndexPromptPersonalization(t *testing.T) {
+	fetchIndex := func(t *testing.T, mut func(*App)) string {
+		t.Helper()
+		_, srv := newTestServer(t, mut)
+		c := login(t, srv)
+		resp, err := http.DefaultClient.Do(authedReq(t, c, "GET", srv.URL+"/", nil))
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		b, err := io.ReadAll(resp.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return string(b)
+	}
+
+	t.Run("default prompt", func(t *testing.T) {
+		body := fetchIndex(t, nil)
+		if !strings.Contains(body, "you@stash") {
+			t.Error("index without APP_USER should keep the you@stash prompt")
+		}
+	})
+
+	t.Run("configured user", func(t *testing.T) {
+		body := fetchIndex(t, func(a *App) { a.cfg.UserName = "exbarboss" })
+		if !strings.Contains(body, "exbarboss@stash") {
+			t.Error("index should render the configured APP_USER in the prompt")
+		}
+		if strings.Contains(body, "you@stash") {
+			t.Error("default prompt should be replaced when APP_USER is set")
+		}
+	})
+
+	t.Run("html in user name is escaped", func(t *testing.T) {
+		body := fetchIndex(t, func(a *App) { a.cfg.UserName = `<img src=x>` })
+		if strings.Contains(body, "<img src=x>@stash") {
+			t.Error("APP_USER must be HTML-escaped in the page")
+		}
+		if !strings.Contains(body, "&lt;img src=x&gt;@stash") {
+			t.Error("escaped APP_USER should appear in the prompt")
+		}
+	})
+}

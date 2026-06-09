@@ -12,6 +12,7 @@ services:
       # git-ignored. No fallback on purpose: compose fails fast if .env is missing
       # rather than starting an internet-facing instance with a guessable password.
       APP_PASSWORD: "${APP_PASSWORD:?APP_PASSWORD must be set in .env}"
+      APP_USER: "${APP_USER:-you}"
       MAX_ITEMS: "${MAX_ITEMS:-200}"
       MAX_AGE_DAYS: "${MAX_AGE_DAYS:-30}"
       MAX_UPLOAD_MB: "${MAX_UPLOAD_MB:-100}"

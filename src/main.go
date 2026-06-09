@@ -22,6 +22,7 @@ type Config struct {
 	Port        string
 	DataDir     string
 	Password    string
+	UserName    string
 	MaxItems    int
 	MaxAgeDays  int
 	MaxUploadMB int64
@@ -32,6 +33,7 @@ func loadConfig() Config {
 		Port:        env("PORT", "7827"),
 		DataDir:     env("DATA_DIR", "/data"),
 		Password:    os.Getenv("APP_PASSWORD"),
+		UserName:    env("APP_USER", "you"),
 		MaxItems:    envInt("MAX_ITEMS", 200),
 		MaxAgeDays:  envInt("MAX_AGE_DAYS", 30),
 		MaxUploadMB: int64(envInt("MAX_UPLOAD_MB", 100)),
