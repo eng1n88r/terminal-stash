@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="stash terminal">
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="0.7" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- terminal tile -->
+  <rect x="1" y="1" width="30" height="30" rx="6" fill="#0b0e0f" stroke="#1f6e43" stroke-width="1.5"/>
+  <!-- prompt: chevron + cursor underscore, phosphor green -->
+  <g fill="none" stroke="#3ad07a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+    <polyline points="9,11 14,16 9,21"/>
+    <line x1="17" y1="21.5" x2="23" y2="21.5"/>
+  </g>
+</svg>
