@@ -26,6 +26,7 @@ func (app *App) handleIndex(w http.ResponseWriter, r *http.Request) {
 		b = bytes.ReplaceAll(b, []byte("user@stash"), []byte(html.EscapeString(u)+"@stash"))
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
 	_, _ = w.Write(b)
 }
 
@@ -45,6 +46,7 @@ func (app *App) servePage(w http.ResponseWriter, path string) {
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
 	_, _ = w.Write(b)
 }
 

@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"embed"
+	"encoding/hex"
 	"errors"
 	"io/fs"
 	"log"
@@ -10,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -145,7 +148,7 @@ func (a *App) routes() http.Handler {
 	if err != nil {
 		log.Fatalf("embed sub: %v", err)
 	}
-	assets := http.FileServer(http.FS(sub))
+	assets := staticCache(sub, http.FileServer(http.FS(sub)))
 	mux.Handle("GET /static/", http.StripPrefix("/static/", assets))
 
 	// Auth endpoints.
@@ -165,6 +168,43 @@ func (a *App) routes() http.Handler {
 	mux.HandleFunc("GET /api/events", a.requireAuthAPI(a.handleEvents))
 
 	return securityHeaders(mux)
+}
+
+// staticCache adds revalidation-friendly caching to the asset file server.
+// Embedded files carry no mod time, so http.FileServer emits no validators and
+// any cache in front (browser heuristics, a CDN on the reverse-proxy path)
+// holds stale CSS/JS across releases. A content-hash ETag plus
+// Cache-Control: no-cache makes every load a cheap 304 revalidation while
+// guaranteeing new builds are picked up immediately.
+func staticCache(sub fs.FS, next http.Handler) http.Handler {
+	etags := map[string]string{}
+	err := fs.WalkDir(sub, ".", func(p string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+		b, err := fs.ReadFile(sub, p)
+		if err != nil {
+			return err
+		}
+		sum := sha256.Sum256(b)
+		etags[p] = `"` + hex.EncodeToString(sum[:8]) + `"`
+		return nil
+	})
+	if err != nil {
+		log.Fatalf("hash static assets: %v", err)
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tag, ok := etags[strings.TrimPrefix(r.URL.Path, "/")]
+		if ok {
+			w.Header().Set("ETag", tag)
+			w.Header().Set("Cache-Control", "no-cache")
+			if strings.Contains(r.Header.Get("If-None-Match"), tag) {
+				w.WriteHeader(http.StatusNotModified)
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // securityHeaders adds defense-in-depth headers to every response. The strict

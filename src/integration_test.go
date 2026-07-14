@@ -111,6 +111,45 @@ func TestSecurityHeadersOnEveryResponse(t *testing.T) {
 	}
 }
 
+func TestStaticAssetCaching(t *testing.T) {
+	_, srv := newTestServer(t, nil)
+
+	resp, err := http.Get(srv.URL + "/static/app.js")
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	etag := resp.Header.Get("ETag")
+	if etag == "" {
+		t.Fatal("no ETag on /static/app.js")
+	}
+	if cc := resp.Header.Get("Cache-Control"); cc != "no-cache" {
+		t.Errorf("Cache-Control = %q, want %q", cc, "no-cache")
+	}
+
+	// Revalidation with the same tag must produce a 304.
+	req, _ := http.NewRequest("GET", srv.URL+"/static/app.js", nil)
+	req.Header.Set("If-None-Match", etag)
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusNotModified {
+		t.Errorf("If-None-Match revalidation -> %d, want 304", resp.StatusCode)
+	}
+
+	// HTML pages must not be stored at all.
+	resp, err = http.Get(srv.URL + "/login")
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if cc := resp.Header.Get("Cache-Control"); cc != "no-store" {
+		t.Errorf("/login Cache-Control = %q, want %q", cc, "no-store")
+	}
+}
+
 func TestPageRedirects(t *testing.T) {
 	_, srv := newTestServer(t, nil)
 	client := noRedirect()
