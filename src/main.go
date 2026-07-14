@@ -170,12 +170,9 @@ func (a *App) routes() http.Handler {
 	return securityHeaders(mux)
 }
 
-// staticCache adds revalidation-friendly caching to the asset file server.
-// Embedded files carry no mod time, so http.FileServer emits no validators and
-// any cache in front (browser heuristics, a CDN on the reverse-proxy path)
-// holds stale CSS/JS across releases. A content-hash ETag plus
-// Cache-Control: no-cache makes every load a cheap 304 revalidation while
-// guaranteeing new builds are picked up immediately.
+// staticCache adds a content-hash ETag + Cache-Control: no-cache to static
+// assets. Embedded files have no mod time, so http.FileServer alone emits no
+// validators and caches (browser, CDN) hold stale assets across releases.
 func staticCache(sub fs.FS, next http.Handler) http.Handler {
 	etags := map[string]string{}
 	err := fs.WalkDir(sub, ".", func(p string, d fs.DirEntry, err error) error {
