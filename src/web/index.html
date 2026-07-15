@@ -22,31 +22,31 @@
       </div>
     </header>
 
-    <div class="columns">
-      <section class="composer col-left">
-        <div class="col-title">// new</div>
+    <section class="composer">
+      <div class="compose-row">
         <div class="field">
           <span class="glyph">&gt;</span>
-          <textarea id="text" placeholder="type or paste text…  (Ctrl/Cmd+Enter to send)"></textarea>
+          <textarea id="text" placeholder="type or paste text…"></textarea>
         </div>
-        <div class="composer-actions">
-          <div class="toolbar">
-            <button class="btn" id="file-btn">upload</button>
-            <button class="btn" id="send-btn">send</button>
-          </div>
+        <div class="toolbar">
+          <button class="btn primary" id="file-btn">upload</button>
+          <button class="btn primary" id="send-btn">send</button>
         </div>
-        <div class="hint">paste anywhere · drag &amp; drop files · Ctrl/Cmd+V</div>
-        <input id="file-input" type="file" multiple hidden />
-      </section>
+      </div>
+      <div class="composer-foot">
+        <div class="hint">paste anywhere · drag &amp; drop files · Ctrl/Cmd+Enter to send</div>
+        <div class="stats" id="stats"></div>
+      </div>
+      <input id="file-input" type="file" multiple hidden />
+    </section>
 
-      <section class="col-right">
-        <div class="col-title">// recent — newest first</div>
-        <div id="feed"></div>
-      </section>
-    </div>
+    <section>
+      <div class="col-title">// recent — newest first</div>
+      <div id="feed"></div>
+    </section>
   </div>
 
-  <div id="flash"></div>
+  <div id="flash" role="status"></div>
 
   <script type="module" src="/static/app.js"></script>
 </body>

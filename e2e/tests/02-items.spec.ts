@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
-import { login } from './helpers';
+import { login, rm } from './helpers';
 
 test('text snippet: send, render, copy, delete', async ({ page }) => {
   await login(page);
@@ -15,7 +15,7 @@ test('text snippet: send, render, copy, delete', async ({ page }) => {
   await item.locator('.act-copy').click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(tag);
 
-  await item.locator('.act-del').click();
+  await rm(item);
   await expect(item).toHaveCount(0);
 });
 
@@ -31,8 +31,33 @@ test('second tab stays in sync over SSE', async ({ page, context }) => {
   const mirrored = page2.locator('.item', { hasText: tag });
   await expect(mirrored).toBeVisible();
 
-  await page.locator('.item', { hasText: tag }).locator('.act-del').click();
-  await expect(mirrored).toHaveCount(0);
+  // the DELETE only reaches the server once the 4s undo window lapses
+  await rm(page.locator('.item', { hasText: tag }));
+  await expect(mirrored).toHaveCount(0, { timeout: 10_000 });
+});
+
+test('rm can be undone before it commits', async ({ page }) => {
+  await login(page);
+  const tag = `undo-${Date.now()}`;
+
+  await page.fill('#text', tag);
+  await page.click('#send-btn');
+  const item = page.locator('.item', { hasText: tag });
+  await expect(item).toBeVisible();
+
+  // first click only arms the confirm — the item must survive it
+  await item.locator('.act-del').click();
+  await expect(item.locator('.act-del')).toHaveText('sure?');
+  await expect(item).toBeVisible();
+
+  await item.locator('.act-del').click();
+  await expect(item).toHaveCount(0);
+  await page.click('#flash .flash-act');
+  await expect(item).toBeVisible();
+
+  // the server never saw the DELETE, so the item survives a reload
+  await page.reload();
+  await expect(page.locator('.item', { hasText: tag })).toBeVisible();
 });
 
 test('file upload, download, delete', async ({ page }, testInfo) => {
@@ -52,7 +77,7 @@ test('file upload, download, delete', async ({ page }, testInfo) => {
   expect(resp.headers()['content-disposition']).toContain('attachment');
   expect(resp.headers()['x-content-type-options']).toBe('nosniff');
 
-  await item.locator('.act-del').click();
+  await rm(item);
   await expect(item).toHaveCount(0);
 });
 

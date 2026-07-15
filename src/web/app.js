@@ -5,6 +5,8 @@ const textEl = document.getElementById('text');
 const fileInput = document.getElementById('file-input');
 const flashEl = document.getElementById('flash');
 const dropzone = document.getElementById('dropzone');
+const statsEl = document.getElementById('stats');
+const sendBtn = document.getElementById('send-btn');
 
 // --- theme cycler (phosphor palettes), persisted -----------------------------
 const THEME_KEY = 'hc_theme';
@@ -32,12 +34,23 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
 });
 
 // --- helpers -----------------------------------------------------------------
-function flash(msg) {
+// flash('msg') shows a transient toast; flash('msg', {label, fn}) adds an
+// action button (e.g. undo) and keeps the toast up for the whole undo window.
+function flash(msg, action) {
   flashEl.textContent = msg;
+  if (action) {
+    const b = document.createElement('button');
+    b.className = 'act flash-act';
+    b.textContent = action.label;
+    b.addEventListener('click', () => { hideFlash(); action.fn(); });
+    flashEl.append(' ', b);
+  }
   flashEl.classList.add('show');
   clearTimeout(flash._t);
-  flash._t = setTimeout(() => flashEl.classList.remove('show'), 1600);
+  flash._t = setTimeout(hideFlash, action ? UNDO_MS : 1600);
 }
+
+function hideFlash() { flashEl.classList.remove('show'); }
 
 function esc(s) {
   return s.replace(/[&<>"']/g, (c) => (
@@ -68,6 +81,7 @@ function itemNode(it) {
   el.className = 'item';
   el.dataset.id = it.id;
   el.dataset.created = it.created_at;
+  el.dataset.size = it.size;
 
   if (it.kind === 'text') {
     el.innerHTML = `
@@ -75,17 +89,23 @@ function itemNode(it) {
         <span class="tag">text</span>
         <span class="filesize">${fmtSize(it.size)}</span>
         <span class="spacer"></span>
-        <span class="time">${ago(it.created_at)}</span>
+        <span class="item-actions">
+          <button class="act act-copy">copy</button>
+          <button class="act danger act-del">rm</button>
+        </span>
+        <span class="time"></span>
       </div>
-      <pre></pre>
-      <div class="item-actions">
-        <button class="btn act-copy">copy</button>
-        <button class="btn danger act-del">rm</button>
-      </div>`;
+      <pre class="copyable" title="click to copy"></pre>`;
     el.querySelector('pre').textContent = it.content;
-    el.querySelector('.act-copy').addEventListener('click', async () => {
+    const copy = async () => {
       try { await navigator.clipboard.writeText(it.content); flash('✓ copied'); }
       catch { flash('✗ clipboard blocked'); }
+    };
+    el.querySelector('.act-copy').addEventListener('click', copy);
+    el.querySelector('pre').addEventListener('click', () => {
+      // don't clobber a manual text selection with a full copy
+      if (String(window.getSelection())) return;
+      copy();
     });
   } else {
     el.innerHTML = `
@@ -94,22 +114,89 @@ function itemNode(it) {
         <span class="filesize">${fmtSize(it.size)}</span>
         <span class="mime">${esc(it.mime || '')}</span>
         <span class="spacer"></span>
-        <span class="time">${ago(it.created_at)}</span>
+        <span class="item-actions">
+          <a class="act" href="/api/files/${it.id}" download>download</a>
+          <button class="act danger act-del">rm</button>
+        </span>
+        <span class="time"></span>
       </div>
-      <div class="filename">${esc(it.filename || it.content)}</div>
-      <div class="item-actions">
-        <a class="btn" href="/api/files/${it.id}" download>download</a>
-        <button class="btn danger act-del">rm</button>
-      </div>`;
+      <div class="filename">${esc(it.filename || it.content)}</div>`;
   }
 
-  el.querySelector('.act-del').addEventListener('click', async () => {
-    const res = await fetch('/api/items/' + it.id, { method: 'DELETE' });
-    if (res.ok) { el.remove(); refreshEmpty(); }
-    else flash('✗ delete failed');
+  const t = el.querySelector('.time');
+  t.textContent = ago(it.created_at);
+  t.title = new Date(it.created_at * 1000).toLocaleString();
+
+  // Two-step rm: first click arms ("sure?" for 2.5s), second click deletes.
+  const del = el.querySelector('.act-del');
+  del.addEventListener('click', () => {
+    if (!del.classList.contains('confirm')) {
+      del.classList.add('confirm');
+      del.textContent = 'sure?';
+      del._t = setTimeout(() => {
+        del.classList.remove('confirm');
+        del.textContent = 'rm';
+      }, 2500);
+      return;
+    }
+    clearTimeout(del._t);
+    deferDelete(it.id, el);
   });
   return el;
 }
+
+// --- delete with undo ----------------------------------------------------------
+// rm detaches the item immediately but only sends the DELETE after the undo
+// window passes; undo just reattaches the element and cancels the timer.
+const UNDO_MS = 4000;
+const pendingDeletes = new Map(); // id -> {el, next, timer}
+
+function deferDelete(id, el) {
+  const next = el.nextElementSibling;
+  el.remove();
+  refreshEmpty();
+  pendingDeletes.set(id, { el, next, timer: setTimeout(() => commitDelete(id), UNDO_MS) });
+  flash('removed', { label: 'undo', fn: () => undoDelete(id) });
+}
+
+async function commitDelete(id, unloading = false) {
+  const p = pendingDeletes.get(id);
+  if (!p) return;
+  pendingDeletes.delete(id);
+  clearTimeout(p.timer);
+  if (unloading) {
+    fetch('/api/items/' + id, { method: 'DELETE', keepalive: true });
+    return;
+  }
+  const res = await fetch('/api/items/' + id, { method: 'DELETE' });
+  if (!res.ok && res.status !== 404) { reinsert(p); flash('✗ delete failed'); }
+}
+
+function undoDelete(id) {
+  const p = pendingDeletes.get(id);
+  if (!p) return;
+  pendingDeletes.delete(id);
+  clearTimeout(p.timer);
+  reinsert(p);
+}
+
+function reinsert({ el, next }) {
+  if (next && next.isConnected) {
+    next.before(el);
+  } else {
+    // original neighbor is gone — fall back to newest-first timestamp order
+    const created = Number(el.dataset.created);
+    const after = [...feed.querySelectorAll('.item')].find((n) => Number(n.dataset.created) <= created);
+    if (after) after.before(el);
+    else feed.appendChild(el);
+  }
+  refreshEmpty();
+}
+
+// If the tab closes mid-undo-window, still deliver the pending DELETEs.
+window.addEventListener('pagehide', () => {
+  for (const id of [...pendingDeletes.keys()]) commitDelete(id, true);
+});
 
 function refreshEmpty() {
   const has = feed.querySelector('.item');
@@ -122,6 +209,16 @@ function refreshEmpty() {
   } else if (has && empty) {
     empty.remove();
   }
+  updateStats();
+}
+
+function updateStats() {
+  const items = feed.querySelectorAll('.item');
+  let total = 0;
+  items.forEach((n) => { total += Number(n.dataset.size) || 0; });
+  statsEl.textContent = items.length
+    ? `${items.length} item${items.length === 1 ? '' : 's'} · ${fmtSize(total)}`
+    : '';
 }
 
 function prepend(it) {
@@ -131,6 +228,9 @@ function prepend(it) {
 }
 
 function removeById(id) {
+  // deleted elsewhere — a local pending delete for it is moot
+  const p = pendingDeletes.get(id);
+  if (p) { pendingDeletes.delete(id); clearTimeout(p.timer); }
   const el = feed.querySelector(`.item[data-id="${id}"]`);
   if (el) el.remove();
   refreshEmpty();
@@ -156,14 +256,19 @@ setInterval(() => {
 // --- actions -----------------------------------------------------------------
 async function sendText() {
   const content = textEl.value;
-  if (!content.trim()) return;
-  const res = await fetch('/api/text', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ content }),
-  });
-  if (res.ok) { textEl.value = ''; flash('✓ sent'); }
-  else flash('✗ send failed');
+  if (!content.trim() || sendBtn.disabled) return;
+  sendBtn.disabled = true; // no double-submit on double-click / repeated Ctrl+Enter
+  try {
+    const res = await fetch('/api/text', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content }),
+    });
+    if (res.ok) { textEl.value = ''; flash('✓ sent'); }
+    else flash('✗ send failed');
+  } finally {
+    sendBtn.disabled = false;
+  }
 }
 
 async function uploadFiles(files) {
@@ -179,7 +284,7 @@ async function uploadFiles(files) {
   }
 }
 
-document.getElementById('send-btn').addEventListener('click', sendText);
+sendBtn.addEventListener('click', sendText);
 document.getElementById('file-btn').addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', () => { uploadFiles(fileInput.files); fileInput.value = ''; });
 
