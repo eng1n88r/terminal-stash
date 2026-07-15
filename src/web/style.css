@@ -183,6 +183,8 @@ header {
 .btn.danger:hover { background: var(--danger); color: var(--bg); border-color: var(--danger); }
 .btn.primary { color: var(--accent); text-shadow: var(--glow); }
 .btn.primary::before, .btn.primary::after { color: var(--accent); }
+.btn.primary:hover { color: var(--bg); text-shadow: none; }
+.btn.primary:hover::before, .btn.primary:hover::after { color: var(--bg); }
 .btn:disabled { opacity: 0.5; cursor: default; pointer-events: none; }
 
 /* Quiet inline actions (items, flash toast). */
