@@ -7,24 +7,62 @@ const flashEl = document.getElementById('flash');
 const dropzone = document.getElementById('dropzone');
 const statsEl = document.getElementById('stats');
 const sendBtn = document.getElementById('send-btn');
+const syncStatus = document.getElementById('sync-status');
+const composer = document.querySelector('.composer');
+
+// Keep the editor open while it has content. Otherwise moving focus from the
+// textarea to Send collapses the field during pointerdown, shifts the button,
+// and causes the browser to discard the click before it reaches pointerup.
+function syncComposerState() {
+  composer.classList.toggle('has-content', textEl.value.length > 0);
+}
+textEl.addEventListener('input', syncComposerState);
+syncComposerState();
 
 // --- theme cycler (phosphor palettes), persisted -----------------------------
 const THEME_KEY = 'hc_theme';
 const THEMES = ['green', 'amber', 'cyan', 'ice', 'ultraviolet', 'synthwave', 'matrix', 'mono'];
 const themeBtn = document.getElementById('theme-btn');
+const themeMenu = document.getElementById('theme-menu');
+
+for (const theme of THEMES) {
+  const option = document.createElement('button');
+  option.type = 'button';
+  option.className = 'theme-option';
+  option.dataset.theme = theme;
+  option.setAttribute('role', 'menuitemradio');
+  option.innerHTML = `<span class="theme-swatch" data-swatch="${theme}"></span><span>${theme}</span>`;
+  option.addEventListener('click', () => { applyTheme(theme); closeThemeMenu(); });
+  themeMenu.appendChild(option);
+}
 
 function applyTheme(t) {
   if (!THEMES.includes(t)) t = 'green';
   if (t === 'green') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme', t);
-  themeBtn.textContent = t; // bracket framing comes from CSS ::before/::after
+
+  themeBtn.textContent = `theme: ${t}`;
+  themeMenu.querySelectorAll('.theme-option').forEach((option) => {
+    option.setAttribute('aria-checked', String(option.dataset.theme === t));
+  });
   localStorage.setItem(THEME_KEY, t);
 }
 
 applyTheme(localStorage.getItem(THEME_KEY) || 'green');
 themeBtn.addEventListener('click', () => {
-  const cur = localStorage.getItem(THEME_KEY) || 'green';
-  applyTheme(THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length]);
+  const open = themeMenu.hidden;
+  themeMenu.hidden = !open;
+  themeBtn.setAttribute('aria-expanded', String(open));
+});
+function closeThemeMenu() {
+  themeMenu.hidden = true;
+  themeBtn.setAttribute('aria-expanded', 'false');
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.theme-control')) closeThemeMenu();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { closeThemeMenu(); themeBtn.focus(); }
 });
 
 // --- logout ------------------------------------------------------------------
@@ -93,7 +131,7 @@ function itemNode(it) {
           <button class="act act-copy">copy</button>
           <button class="act danger act-del">rm</button>
         </span>
-        <span class="time"></span>
+        <time class="time"></time>
       </div>
       <pre class="copyable" title="click to copy"></pre>`;
     el.querySelector('pre').textContent = it.content;
@@ -118,7 +156,7 @@ function itemNode(it) {
           <a class="act" href="/api/files/${it.id}" download>download</a>
           <button class="act danger act-del">rm</button>
         </span>
-        <span class="time"></span>
+        <time class="time"></time>
       </div>
       <div class="filename">${esc(it.filename || it.content)}</div>`;
   }
@@ -240,6 +278,7 @@ async function loadItems() {
   const res = await fetch('/api/items');
   if (res.status === 401) { window.location.href = '/login'; return; }
   const items = await res.json();
+  feed.setAttribute('aria-busy', 'false');
   feed.innerHTML = '';
   for (const it of items) feed.appendChild(itemNode(it));
   refreshEmpty();
@@ -264,7 +303,11 @@ async function sendText() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content }),
     });
-    if (res.ok) { textEl.value = ''; flash('✓ sent'); }
+    if (res.ok) {
+      textEl.value = '';
+      syncComposerState();
+      flash('✓ sent');
+    }
     else flash('✗ send failed');
   } finally {
     sendBtn.disabled = false;
@@ -326,6 +369,10 @@ window.addEventListener('drop', (e) => {
 // --- live updates via SSE ----------------------------------------------------
 function connectEvents() {
   const es = new EventSource('/api/events');
+  es.onopen = () => {
+    syncStatus.classList.add('online');
+    syncStatus.querySelector('span:last-child').textContent = 'live';
+  };
   es.onmessage = (e) => {
     try {
       const ev = JSON.parse(e.data);
@@ -333,7 +380,10 @@ function connectEvents() {
       else if (ev.type === 'deleted') removeById(ev.id);
     } catch (_) {}
   };
-  es.onerror = () => { /* EventSource auto-reconnects */ };
+  es.onerror = () => {
+    syncStatus.classList.remove('online');
+    syncStatus.querySelector('span:last-child').textContent = 'reconnecting';
+  };
 }
 
 // --- boot --------------------------------------------------------------------

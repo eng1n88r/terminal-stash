@@ -1,11 +1,5 @@
 // stash login — external file so the CSP can stay strict (no inline scripts).
 
-// Apply the saved theme before paint; this script loads synchronously in <head>.
-(function () {
-  var t = localStorage.getItem('hc_theme');
-  if (t && t !== 'green') document.documentElement.setAttribute('data-theme', t);
-})();
-
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('login-form');
   const errEl = document.getElementById('error');

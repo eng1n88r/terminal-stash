@@ -7,42 +7,54 @@
   <title>stash</title>
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
   <link rel="stylesheet" href="/static/style.css" />
+  <script src="/static/theme-init.js"></script>
 </head>
 <body>
   <div class="drag-banner">drop files to upload ▼</div>
 
   <div class="wrap" id="dropzone">
-    <header>
-      <div class="prompt">
-        <span class="host">user@stash</span><span class="path">:~</span>$<span class="cursor"></span>
-      </div>
-      <div class="toolbar">
-        <button class="btn" id="theme-btn" title="click to cycle themes">green</button>
-        <button class="btn" id="logout-btn">logout</button>
-      </div>
-    </header>
-
-    <section class="composer">
-      <div class="compose-row">
-        <div class="field">
-          <span class="glyph">&gt;</span>
-          <textarea id="text" placeholder="type or paste text…"></textarea>
+    <div class="sticky-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="prompt">
+            <span class="host">user@stash</span><span class="path">:~</span>$<span class="cursor"></span>
+          </div>
+          <div class="brand-note">shared clipboard · live on your LAN</div>
         </div>
         <div class="toolbar">
-          <button class="btn primary" id="file-btn">upload</button>
-          <button class="btn primary" id="send-btn">send</button>
+          <div class="theme-control">
+            <button class="btn" id="theme-btn" aria-haspopup="true" aria-expanded="false">theme: green</button>
+            <div class="theme-menu" id="theme-menu" role="menu" hidden></div>
+          </div>
+          <button class="btn" id="logout-btn">logout</button>
         </div>
-      </div>
-      <div class="composer-foot">
-        <div class="hint">paste anywhere · drag &amp; drop files · Ctrl/Cmd+Enter to send</div>
-        <div class="stats" id="stats"></div>
-      </div>
-      <input id="file-input" type="file" multiple hidden />
-    </section>
+      </header>
+
+      <section class="composer">
+        <div class="compose-row">
+          <div class="field">
+            <span class="glyph">&gt;</span>
+            <textarea id="text" placeholder="type or paste text…"></textarea>
+          </div>
+          <div class="toolbar">
+            <button class="btn primary" id="file-btn">upload</button>
+            <button class="btn primary" id="send-btn">send</button>
+          </div>
+        </div>
+        <div class="composer-foot">
+          <div class="hint"><kbd>paste</kbd> anywhere · drop files · <kbd>Ctrl/Cmd + Enter</kbd> to send</div>
+          <div class="stats" id="stats"></div>
+        </div>
+        <input id="file-input" type="file" multiple hidden />
+      </section>
+    </div>
 
     <section>
-      <div class="col-title">// recent — newest first</div>
-      <div id="feed"></div>
+      <div class="feed-heading">
+        <div class="col-title">// recent</div>
+        <div class="sync-status" id="sync-status"><span class="status-dot"></span><span>connecting</span></div>
+      </div>
+      <div id="feed" aria-live="polite" aria-busy="true"><div class="empty">— loading stash… —</div></div>
     </section>
   </div>
 

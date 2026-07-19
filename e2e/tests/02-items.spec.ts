@@ -7,10 +7,12 @@ test('text snippet: send, render, copy, delete', async ({ page }) => {
   const tag = `text-${Date.now()}`;
 
   await page.fill('#text', tag);
+  await expect(page.locator('.composer')).toHaveClass(/has-content/);
   await page.click('#send-btn');
   const item = page.locator('.item', { hasText: tag });
   await expect(item).toBeVisible();
   await expect(page.locator('#text')).toHaveValue('');
+  await expect(page.locator('.composer')).not.toHaveClass(/has-content/);
 
   await item.locator('.act-copy').click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(tag);
@@ -87,11 +89,18 @@ test('traversal-shaped ids are rejected', async ({ page }) => {
   expect((await page.request.delete('/api/items/..%2f..%2fstash.db')).status()).toBe(404);
 });
 
-test('theme cycles and persists across reload', async ({ page }) => {
+test('theme picker applies and persists a palette across reload', async ({ page }) => {
   await login(page);
+  await page.fill('#text', 'theme repaint check');
+  await page.click('#send-btn');
+  const snippet = page.locator('.item', { hasText: 'theme repaint check' }).locator('pre');
+  await expect(snippet).toBeVisible();
   await page.click('#theme-btn');
+  await page.click('.theme-option[data-theme="amber"]');
   const theme = () => page.evaluate(() => document.documentElement.getAttribute('data-theme'));
   expect(await theme()).toBe('amber');
+  await expect(snippet).toHaveCSS('color', 'rgb(232, 232, 232)');
+  expect(await snippet.evaluate((el) => el.style.color)).toBe('');
   await page.reload();
   expect(await theme()).toBe('amber');
 });

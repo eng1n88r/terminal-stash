@@ -7,13 +7,14 @@
   <title>stash — login</title>
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
   <link rel="stylesheet" href="/static/style.css" />
-  <!-- Synchronous: applies the saved theme before paint to avoid a flash. -->
+  <script src="/static/theme-init.js"></script>
   <script src="/static/login.js"></script>
 </head>
 <body>
   <div class="login-wrap">
+    <div class="login-status" aria-hidden="true">stash://lan · authentication required</div>
     <div class="login-line">
-      <span class="host">stash</span> login<span class="cursor"></span>
+      <span class="login-prompt"><span class="host">user@stash</span> login</span><span class="cursor"></span>
     </div>
     <form id="login-form">
       <div class="login-field">

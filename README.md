@@ -8,7 +8,7 @@ A minimalist, self-hosted **shared clipboard & file drop** for your home network
 Run it on your home server, open it in a browser on any machine, and copy text or
 files between them. New items appear **live** on every open browser.
 
-The UI is a two-pane terminal: a composer on the left, the live feed on the right.
+The UI is a compact terminal-style composer with a live, newest-first feed.
 
 - Terminal / TUI aesthetic with 8 phosphor themes (green, amber, cyan, ice, ultraviolet, synthwave, matrix, mono — cycle in the top bar)
 - Paste text, click to copy it back anywhere
