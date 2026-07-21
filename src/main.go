@@ -39,7 +39,7 @@ func loadConfig() Config {
 		UserName:    env("APP_USER", "user"),
 		MaxItems:    envInt("MAX_ITEMS", 200),
 		MaxAgeDays:  envInt("MAX_AGE_DAYS", 30),
-		MaxUploadMB: int64(envInt("MAX_UPLOAD_MB", 100)),
+		MaxUploadMB: int64(envInt("MAX_UPLOAD_MB", 200)),
 	}
 }
 

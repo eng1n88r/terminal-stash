@@ -54,7 +54,7 @@ a reverse proxy or tunnel). For direct LAN access use `-p 7827:7827`.
 | `DATA_DIR` | `/data` | Where the SQLite DB and uploaded files are stored. |
 | `MAX_ITEMS` | `200` | Keep at most this many items; oldest are pruned. `0` = unlimited. |
 | `MAX_AGE_DAYS` | `30` | Delete items older than this. `0` = never expire. |
-| `MAX_UPLOAD_MB` | `100` | Reject uploads larger than this. |
+| `MAX_UPLOAD_MB` | `200` | Reject uploads larger than this. |
 
 ## Notes
 

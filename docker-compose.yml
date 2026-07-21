@@ -15,7 +15,7 @@ services:
       APP_USER: "${APP_USER:-user}"
       MAX_ITEMS: "${MAX_ITEMS:-200}"
       MAX_AGE_DAYS: "${MAX_AGE_DAYS:-30}"
-      MAX_UPLOAD_MB: "${MAX_UPLOAD_MB:-100}"
+      MAX_UPLOAD_MB: "${MAX_UPLOAD_MB:-200}"
     volumes:
       - stash-data:/data
     restart: unless-stopped
